@@ -13,10 +13,16 @@ use App\Models\SaleDetail;
 use App\Models\PaymentMethod;
 use App\Models\Delivery;
 use App\Models\Book;
+use Illuminate\Support\Str;
 
 
 class WebController extends Controller
 {
+    private const PICKUP_CITY = 'Chiclayo';
+    private const PICKUP_DISTRICT = 'Chiclayo';
+    private const PICKUP_ADDRESS = 'RECOJO EN TIENDA - Av. Luis Gonzales 1420 - Chiclayo';
+    private const PICKUP_REFERENCE = 'Interior 7 - Galeria El Ferretero';
+
     public function index(){
         $products = Product::active()->orderBy('id','desc')->limit(4)->get();
 
@@ -93,13 +99,37 @@ class WebController extends Controller
      
         $request->validate([
             'voucher' => 'required',
-            'city' => 'required',
-            'district' => 'required',
-            'address' => 'required',
-            'reference' => 'required',
             'payment_method_id' => 'required',
-            'delivery_id' => 'required'
+            'delivery_id' => 'required|exists:deliveries,id'
         ]);
+
+        $delivery = Delivery::findOrFail($request->delivery_id);
+        $isStorePickup = $this->isStorePickup($delivery);
+
+        if ($isStorePickup) {
+            $deliveryData = [
+                'city' => self::PICKUP_CITY,
+                'district' => self::PICKUP_DISTRICT,
+                'address' => self::PICKUP_ADDRESS,
+                'reference' => self::PICKUP_REFERENCE,
+                'delivery_price' => 0,
+            ];
+        } else {
+            $request->validate([
+                'city' => 'required',
+                'district' => 'required',
+                'address' => 'required',
+                'reference' => 'required',
+            ]);
+
+            $deliveryData = [
+                'city' => $request->city,
+                'district' => $request->district,
+                'address' => $request->address,
+                'reference' => $request->reference,
+                'delivery_price' => $this->resolveDeliveryPrice($delivery, $request->district),
+            ];
+        }
     
         // Validar datos adicionales si es una factura
         if ($request->voucher == 'Factura') {
@@ -117,8 +147,6 @@ class WebController extends Controller
         //cart.index
     
         $client_id = auth()->user()->id;
-        $delivery = Delivery::find($request->delivery_id);
-        $delivery_price = $request->delivery_price;
         $total = array_reduce($cart, function($sum, $item){
             return $sum + ($item['price'] * $item['quantity']);
         }, 0);
@@ -139,14 +167,14 @@ class WebController extends Controller
             'phone' => $request->phone,
             'direction' => $request->direction,
             'voucher' => $request->voucher,
-            'city' => $request->city,
-            'district' => $request->district,
-            'address' => $request->address,
-            'reference' => $request->reference,
+            'city' => $deliveryData['city'],
+            'district' => $deliveryData['district'],
+            'address' => $deliveryData['address'],
+            'reference' => $deliveryData['reference'],
             'number' => $sale_number,
             'client_id' => $client_id,
-            'delivery_price' => $delivery_price,
-            'total' => $total + $delivery_price,
+            'delivery_price' => $deliveryData['delivery_price'],
+            'total' => $total + $deliveryData['delivery_price'],
             'payment_method_id' => $request->payment_method_id,
             'delivery_id' => $request->delivery_id,
             'date' => now(),
@@ -186,6 +214,48 @@ class WebController extends Controller
     
         // Redirigir al éxito con la URL del PDF
         return redirect()->route('success')->with('url', route('sales.pdf', $sale)); 
+    }
+
+    private function isStorePickup(Delivery $delivery): bool
+    {
+        return Str::contains(Str::lower($delivery->name), 'recojo');
+    }
+
+    private function resolveDeliveryPrice(Delivery $delivery, ?string $district): float
+    {
+        if ($this->isStorePickup($delivery)) {
+            return 0;
+        }
+
+        $district = Str::lower(Str::ascii(trim((string) $district)));
+
+        if (in_array($district, ['chiclayo', 'la victoria', 'jose leonardo ortiz'], true)) {
+            return 5;
+        }
+
+        if (in_array($district, ['pimentel', 'monsefu', 'reque', 'pomalca', 'tuman'], true)) {
+            return 10;
+        }
+
+        if (in_array($district, [
+            'eten',
+            'eten puerto',
+            'santa rosa',
+            'chongoyape',
+            'lagunas',
+            'cayalti',
+            'patapo',
+            'picsi',
+            'pucala',
+            'zana',
+            'tucume',
+            'nueva arica',
+            'oyotun',
+        ], true)) {
+            return 16;
+        }
+
+        return 0;
     }
     
 

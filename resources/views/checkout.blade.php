@@ -158,7 +158,7 @@
         <div class="form-group">
             <label>Referencia</label>
 			<input type="text" class="form-control" id="reference" name="reference" value="{{ old('reference', auth()->user()->reference) }}" placeholder="Ej: Frente al parque, cerca al hospital, etc.">
-				@error('address')
+				@error('reference')
 					<div class="text-danger small">
 						{{ $message }}
 					</div>
@@ -173,11 +173,6 @@
 			<p><strong>Dirección:</strong> Av. Luis Gonzales 1420 - Chiclayo</p>
 			<p><strong>Horario de atención:</strong> 🕒 Lunes a Sábado de 8:00 a.m. a 2:00 p.m.</p>
 
-			{{-- Campos ocultos para guardar en BD --}}
-			<input type="hidden" name="address" value="RECOJO EN TIENDA - Av. Luis Gonzales 1420 - Chiclayo">
-			<input type="hidden" name="reference" value="Interior 7 - Galería El Ferretero">
-			<input type="hidden" name="city" value="Chiclayo">
-			<input type="hidden" name="district" value="Chiclayo">
 		</div>
 	</div>
 
@@ -567,33 +562,48 @@ document.addEventListener('DOMContentLoaded', function() {
     const addressFields = document.getElementById('addressFields');
     const storePickup = document.getElementById('storePickup');
 
-    const addressInput = document.querySelector('input[name="address"]');
-    const districtSelect = document.querySelector('select[name="district"]');
+    const addressInput = addressFields.querySelector('input[name="address"]');
+    const referenceInput = addressFields.querySelector('input[name="reference"]');
+    const districtSelect = addressFields.querySelector('select[name="district"]');
+    const shippingFields = addressFields.querySelectorAll('input, select, textarea');
+
+    function setShippingFieldsEnabled(enabled) {
+        shippingFields.forEach(function(field) {
+            field.disabled = !enabled;
+        });
+    }
     function toggleDeliveryFields() {
         const selectedOption = deliverySelect.options[deliverySelect.selectedIndex];
-        const deliveryName = selectedOption?.getAttribute('data-name');
+        const deliveryName = selectedOption?.getAttribute('data-name') || '';
+        const isStorePickup = deliveryName.toUpperCase().includes('RECOJO');
 
-        if (deliveryName === 'Recojo en tienda') {
+        if (isStorePickup) {
             addressFields.style.display = 'none';
             storePickup.style.display = 'block';
+            setShippingFieldsEnabled(false);
 
             // ❌ quitar required
             addressInput.removeAttribute('required');
+            referenceInput.removeAttribute('required');
             districtSelect.removeAttribute('required');
 
         } else if (deliveryName) {
             addressFields.style.display = 'block';
             storePickup.style.display = 'none';
+            setShippingFieldsEnabled(true);
 
             // ✅ activar required
             addressInput.setAttribute('required', 'required');
+            referenceInput.setAttribute('required', 'required');
             districtSelect.setAttribute('required', 'required');
 
         } else {
             addressFields.style.display = 'none';
             storePickup.style.display = 'none';
+            setShippingFieldsEnabled(false);
 
             addressInput.removeAttribute('required');
+            referenceInput.removeAttribute('required');
             districtSelect.removeAttribute('required');
         }
     }
