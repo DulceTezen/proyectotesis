@@ -157,7 +157,7 @@
 		</div>
         <div class="form-group">
             <label>Referencia</label>
-			<input type="text" class="form-control" id="reference" name="reference" value="{{ old('reference', auth()->user()->reference) }}" placeholder="Ej: Frente al parque, cerca al hospital, etc.">
+			<input type="text" class="form-control" id="reference" name="reference" value="{{ old('reference', auth()->user()->reference) }}" placeholder="Ej: Frente al parque, cerca al hospital, etc." maxlength="255">
 				@error('reference')
 					<div class="text-danger small">
 						{{ $message }}
@@ -594,7 +594,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // ✅ activar required
             addressInput.setAttribute('required', 'required');
-            referenceInput.setAttribute('required', 'required');
+            referenceInput.removeAttribute('required');
             districtSelect.setAttribute('required', 'required');
 
         } else {

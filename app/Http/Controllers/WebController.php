@@ -119,14 +119,14 @@ class WebController extends Controller
                 'city' => 'required',
                 'district' => 'required',
                 'address' => 'required',
-                'reference' => 'required',
+                'reference' => 'nullable|string|max:255',
             ]);
 
             $deliveryData = [
                 'city' => $request->city,
                 'district' => $request->district,
                 'address' => $request->address,
-                'reference' => $request->reference,
+                'reference' => $this->optionalCheckoutText($request->reference),
                 'delivery_price' => $this->resolveDeliveryPrice($delivery, $request->district),
             ];
         }
@@ -256,6 +256,13 @@ class WebController extends Controller
         }
 
         return 0;
+    }
+
+    private function optionalCheckoutText($value): string
+    {
+        $value = trim((string) $value);
+
+        return $value === '' ? '-' : $value;
     }
     
 

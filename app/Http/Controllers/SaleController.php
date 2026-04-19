@@ -85,7 +85,13 @@ class SaleController extends Controller
         $fpdf->SetFont('Arial', 'B', 12);
         $fpdf->Cell(30, 8, utf8_decode('Dirección:'));
         $fpdf->SetFont('Arial', '', 12);
-        $fpdf->Cell(160, 8, utf8_decode($sale->address ?? '-'));
+        $fpdf->MultiCell(160, 8, utf8_decode($this->pdfText($sale->address)));
+
+        $fpdf->SetFont('Arial', 'B', 12);
+        $fpdf->Cell(30, 8, utf8_decode('Referencia:'));
+        $fpdf->SetFont('Arial', '', 12);
+        $fpdf->MultiCell(160, 8, utf8_decode($this->pdfText($sale->reference)));
+        $fpdf->SetY($fpdf->GetY() - 8);
 
         // 📞 TELÉFONO
         $fpdf->Ln();
@@ -190,5 +196,12 @@ class SaleController extends Controller
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'inline; filename="boleta_'.$sale->number.'.pdf"');
+    }
+
+    private function pdfText($value): string
+    {
+        $value = trim((string) $value);
+
+        return $value === '' ? '-' : $value;
     }
 }
