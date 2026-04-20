@@ -21,6 +21,7 @@
 
 <body id="body">
 
+<header class="site-header">
 <!-- Start Top Header Bar -->
 <section class="top-header">
 	
@@ -62,7 +63,7 @@
 			<div class="col-md-4 col-xs-12 col-sm-4">
 				<!-- Cart -->
 				<ul class="top-menu text-right list-inline">
-					<li class="dropdown cart-nav dropdown-slide">
+					<li class="dropdown cart-nav dropdown-slide {{ request()->routeIs('cart') ? 'active' : '' }}">
 						<a href="{{ route('cart') }}">
 							<i class="tf-ion-android-cart"></i> Carrito
 						</a>
@@ -109,20 +110,20 @@
 				<ul class="nav navbar-nav">
 
 
-					<li class="dropdown ">
+					<li class="dropdown {{ request()->routeIs('index') ? 'active' : '' }}">
 						<a href="{{ route('index') }}">Inicio</a>
 					</li>
-					<li class="dropdown ">
+					<li class="dropdown {{ request()->routeIs('about') ? 'active' : '' }}">
 						<a href="{{ route('about') }}">Nosotros</a>
 					</li>
-					<li class="dropdown ">
+					<li class="dropdown {{ request()->routeIs('shop') || request()->routeIs('product') ? 'active' : '' }}">
 						<a href="{{ route('shop') }}">Tienda</a>
 					</li>
 
 					
 
 					@if(auth()->guard('web')->check())
-					<li class="dropdown dropdown-slide">
+					<li class="dropdown dropdown-slide {{ request()->routeIs('profile') || request()->routeIs('orders') ? 'active' : '' }}">
 						<a href="#!" class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-delay="350"
 							role="button" aria-haspopup="true" aria-expanded="false">Hola {{ auth()->guard('web')->user()->name }} <span
 								class="tf-ion-ios-arrow-down"></span></a>
@@ -133,7 +134,7 @@
 						</ul>
 					</li>
 					@else
-					<li class="dropdown ">
+					<li class="dropdown {{ request()->routeIs('auth.login') ? 'active' : '' }}">
 						<a href="{{ route('auth.login') }}">Ingresar</a>
 					</li>
 					@endif
@@ -145,6 +146,7 @@
 		</div><!-- / .container -->
 	</nav>
 </section>
+</header>
 
 @yield('content')
 
