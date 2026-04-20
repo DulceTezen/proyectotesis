@@ -72,8 +72,8 @@ Route::prefix('admin')->group(function(){
 		Route::resource('books', BookController::class);
 
 		Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+		Route::get('/reports/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
 
 	});
 
 });
-
